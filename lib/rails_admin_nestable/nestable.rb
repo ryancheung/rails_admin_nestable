@@ -85,7 +85,19 @@ module RailsAdmin
               end
 
               if @nestable_conf.list?
-                @tree_nodes = query.order("#{@options[:position_field]} ASC")
+                @filter_params = @nestable_conf.options[:filter_params]
+                @lack_of_params_error = @nestable_conf.options[:lack_of_params_error]
+                if @filter_params.present?
+                  filters = params.permit(*@filter_params)
+                  if filters.blank?
+                    redirect_to back_or_index, alert: @lack_of_params_error
+                    next
+                  end
+
+                  @tree_nodes = query.where(filters).order("#{@options[:position_field]} ASC")
+                else
+                  @tree_nodes = query.order("#{@options[:position_field]} ASC")
+                end
               end
 
               render action: @action.template_name
